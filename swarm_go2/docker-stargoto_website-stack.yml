@@ -1,0 +1,140 @@
+version: '3.3'
+services:
+  nginx:
+    image: "nginx"
+    ports:
+      - "80:80"
+    networks:
+      - stargoto
+    volumes:
+      - "sites:/gotwo_data/sites/"
+      - "archive:/archive/"
+      - "nginx_log:/gotwo_data/logs/nginx/"
+    deploy:
+      replicas: 5
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    configs:
+      - source: www.go2.cn
+        target: /etc/nginx/conf.d/www.go2.cn.conf
+      - source: supplier.go2.cn
+        target: /etc/nginx/conf.d/supplier.go2.cn.conf
+      - source: z.go2.cn
+        target: /etc/nginx/conf.d/z.go2.cn.conf
+      - source: yy.2mm.cn
+        target: /etc/nginx/conf.d/yy.2mm.cn.conf
+      - source: yy.3e3e.cn
+        target: /etc/nginx/conf.d/yy.3e3e.cn.conf
+      - source: www.stargoto.com
+        target: /etc/nginx/conf.d/www.stargoto.com.conf
+      - source: wxapi.ximgs.net
+        target: /etc/nginx/conf.d/wxapi.ximgs.net.conf
+  redis:
+    image: "redis"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    networks:
+      - stargoto
+  memcached:
+    image: "memcached"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    networks:
+      - stargoto
+  php5_3:
+    image: "stargoto/php5.3:v1"
+    volumes:
+      - "php5_log:/gotwo_data/logs/php/"
+      - "sites:/gotwo_data/sites/"
+      - "archive:/archive/"
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    extra_hosts:
+      - "tomcat_gsb68_api:118.178.131.112"
+      - "tomcat_sms:192.168.10.40"
+      - "tomcat_behavior:192.168.10.40"
+      - "tomcat_datamgt:116.62.31.64"
+      - "tomcat_searchmgt:192.168.10.40"
+      - "tomcat_search:192.168.10.40"
+      - "tomcat_cache:192.168.10.40"
+      - "tomcat_producer:192.168.10.40"
+      - "tomcat_admgt:192.168.10.40"
+    networks:
+      - stargoto
+  php7_1:
+    image: "stargoto/php7-fpm:v3"
+    volumes:
+      - "php7_log:/gotwo_data/logs/php"
+      - "sites:/gotwo_data/sites/"
+      - "archive:/archive/"
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    extra_hosts:
+      - "tomcat_searchmgt:192.168.10.40"
+      - "tomcat_search:192.168.10.40"
+      - "tomcat_cache:192.168.10.40"
+      - "tomcat_publish_ali:192.168.10.40"
+      - "tomcat_behavior:192.168.10.40"
+      - "tomcat_sms:192.168.10.40"
+      - "tomcat_producer:192.168.10.40"
+      - "tomcat_admgt:192.168.10.40"
+      - "tomcat_datamgt:192.168.10.40"
+      - "tomcat_observer:192.168.10.40"
+    networks:
+      - stargoto
+volumes:
+  sites:
+  archive:
+  nginx_log:
+  php5_log:
+  php7_log:
+configs:
+  www.go2.cn:
+    file: ./nginx_config/go2.cn/www.go2.cn.conf
+  supplier.go2.cn:
+    file: ./nginx_config/go2.cn/supplier.go2.cn.conf
+  z.go2.cn:
+    file: ./nginx_config/go2.cn/z.go2.cn.conf
+  yy.2mm.cn:
+    file: ./nginx_config/2mm.cn/yy.2mm.cn.conf
+  yy.3e3e.cn:
+    file: ./nginx_config/3e3e.cn/yy.3e3e.cn.conf
+  www.3e3e.cn:
+    file: ./nginx_config/3e3e.cn/www.3e3e.cn.conf
+  www.stargoto.com:
+    file: ./nginx_config/stargoto.com/www.stargoto.com.conf
+  wxapi.ximgs.net:
+    file: ./nginx_config/ximgs.net/wxapi.ximgs.net.conf
+networks:
+  stargoto:
+    driver: overlay
+
